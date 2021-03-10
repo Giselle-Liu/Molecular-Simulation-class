@@ -1,10 +1,21 @@
+/*
+Ch3 p.28
+
+Programming Exercise: Use the following class definitions to calculate the VDW
+and Coul interactions of an oxygen and an hydrogen atom at the following
+positions
+O (0,0,0), H (0,0.7,-0.7)
+The partial charges on O is -0.82, on H is +0.41
+LJ parameters (R0,D0) for O is (3.5532,0.1848 ), for H is (0.9,0.01)
+*/
+
 #include <iostream>
 #include <cmath>
 using namespace std;
 
 class ATOM {
  public:
-  double x[3];  // position vector of atom in Angstroms
+  double x[3];  // position vector of atom in Angstroms (3-dim)
   double chg;   // partial charges in electrons
   double R0;    // LJ (Lennard-Jones) R0 parameter in Angstroms
   double D0;    // LJ D0 parameter in kcal/mol
@@ -18,16 +29,16 @@ class NONBOND {
   double r2;                       // r*r
   double vdw;                      // van der waals energy in kcal/mol
   double cou;                      // coulomb energy in kcal/mol
-  double cal_r(ATOM &, ATOM &);    // calculate r and r2
-  double cal_eng(ATOM &, ATOM &);  // calculate nonbond energy
+  void cal_r(ATOM &, ATOM &);    // calculate r and r2
+  void cal_eng(ATOM &, ATOM &);  // calculate nonbond energy
 
   NONBOND() { r = r2 = vdw = cou = 0; };
 };
 
 int main(int argc, char **argv) {
   ATOM a[2];
-  
-  // data for Oxygen
+
+  // data for Oxygen (atom)
   a[0].x[0] = 0;
   a[0].x[1] = 0;
   a[0].x[2] = 0;
@@ -35,7 +46,7 @@ int main(int argc, char **argv) {
   a[0].R0 = 3.5532;
   a[0].D0 = 0.1848;
 
-  // data for Hydrogen
+  // data for Hydrogen (atom)
   a[1].x[0] = 0;
   a[1].x[1] = 0.7;
   a[1].x[2] = -0.7;
@@ -51,15 +62,16 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-double NONBOND::cal_r(ATOM &a, ATOM &b) {
+void NONBOND::cal_r(ATOM &a, ATOM &b) {
   r2 = (a.x[0] - b.x[0]) * (a.x[0] - b.x[0]) +
        (a.x[1] - b.x[1]) * (a.x[1] - b.x[1]) +
        (a.x[2] - b.x[2]) * (a.x[2] - b.x[2]);
   r = sqrt(r2);
-  return r;
+
+  return;
 }
 
-double NONBOND::cal_eng(ATOM &a, ATOM &b) {
+void NONBOND::cal_eng(ATOM &a, ATOM &b) {
   double R0, D0;
 
   R0 = 0.5 * (a.R0 + b.R0);
@@ -67,7 +79,10 @@ double NONBOND::cal_eng(ATOM &a, ATOM &b) {
   cout << "R0: " << R0 << endl;
   cout << "D0: " << D0 << endl;
 
-  vdw = D0 * (pow(R0 / cal_r(a, b), 12) - 2 * pow(R0 / cal_r(a, b), 6));
-  cou = 332.0637 * a.chg * b.chg / cal_r(a, b);
-  return 0;
+  cal_r(a, b);
+
+  vdw = D0 * (pow(R0 / r, 12) - 2 * pow(R0 / r, 6));  // p.25
+  cou = 332.0637 * a.chg * b.chg / r;   // p.24
+
+  return;
 }

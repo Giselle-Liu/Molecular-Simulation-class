@@ -4,7 +4,7 @@ using namespace std;
 
 class ATOM {
  public:
-  double x[3];  // position vector of atom in Angstroms
+  double x[3];  // position vector of atom in Angstroms (3-dim)
   double chg;   // partial charges in electrons
   double R0;    // LJ R0 parameter in Angstroms
   double D0;    // LJ D0 parameter in kcal/mol
@@ -15,12 +15,12 @@ class ATOM {
 class ANGLE {
  public:
   ATOM* atm[3];
-  double ang0;
+  double ang0;    // equilibrium angle
   double ang;
-  double K;
+  double K;       // force constant in units of (kcal/mol)
   double eng;
-  double cal_angle();
-  double cal_eng();
+  void cal_angle();
+  void cal_eng();
 
   ANGLE() { ang0 = K = eng = 0; };
 };
@@ -52,25 +52,25 @@ int main(int argc, char** argv) {
   a[2].R0 = 0.9;
   a[2].D0 = 0.01;
 
-  ANGLE ang;
-  ang.atm[0] = &a[0];
-  ang.atm[1] = &a[1];
-  ang.atm[2] = &a[2];
+  ANGLE bend;
+  bend.atm[0] = &a[0];
+  bend.atm[1] = &a[1];
+  bend.atm[2] = &a[2];
 
-  ang.ang0 = 109.5;
-  ang.K = 100;
+  bend.ang0 = 109.5;
+  bend.K = 100;
 
-  ang.cal_eng();
+  bend.cal_eng();
 
-  cout << "bond angle is " << acos(ang.ang) / acos(-1) * 180 << " A, energy is "
-       << ang.eng << " kcal/mol" << endl;
+  cout << "bond angle is " << bend.ang / acos(-1) * 180 << " A, energy is "
+       << bend.eng << " kcal/mol" << endl;
 
   return 0;
 }
 
-double ANGLE::cal_angle() {
+void ANGLE::cal_angle() {
   double costheta, b12, b22, ip;
-  double p[2][2];
+  double p[2][3];
 
   p[0][0] = atm[1]->x[0] - atm[0]->x[0];
   p[0][1] = atm[1]->x[1] - atm[0]->x[1];
@@ -85,14 +85,15 @@ double ANGLE::cal_angle() {
   ip = p[0][0] * p[1][0] + p[0][1] * p[1][1] + p[0][2] * p[1][2];
 
   costheta = ip / (b12 * b22);
+  ang = acos(costheta);
 
-  return acos(costheta);
+  return;
 };
 
-double ANGLE::cal_eng() {
-  double ang = cal_angle();
+void ANGLE::cal_eng() {
+  cal_angle();
   eng = 0.5 * K / pow(sin(ang0 * acos(-1) / 180), 2) *
-        pow(cos(ang) - cos(ang0 * acos(-1) / 180), 2);
+        pow(cos(ang) - cos(ang0 * acos(-1) / 180), 2);    // p.35
 
-  return 0;
+  return;
 }
